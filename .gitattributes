@@ -4,6 +4,15 @@
 * text=auto
 
 ###############################################################################
+# Ensure pdfs are treated as binary for diffing                               #
+# so that git log -S works as expected on Window out of the box.              #
+# Linux has a txt2pdf tool to generate diffs for PDFs based on text content - #
+# not sure how useful that is anyway.                                         #
+# Assumption here that diffing PDFs is not going to be very useful.           #
+###############################################################################
+*.pdf -diff 
+
+###############################################################################
 # Set default behavior for command prompt diff.
 #
 # This is need for earlier builds of msysgit that does not have it on by
