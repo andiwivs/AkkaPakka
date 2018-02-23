@@ -17,9 +17,9 @@ namespace AkkaPakka
             var playbackActorProps = Props.Create<PlaybackActor>();
             
             var playbackActorRef = MovieStreamingActorSystem.ActorOf(playbackActorProps, "playbackActor");
-
-            var message = new PlayMovieMessage("Akka Pakka: The Movie", 42);
-            playbackActorRef.Tell(message);
+            
+            playbackActorRef.Tell(new PlayMovieMessage("Akka Pakka: The Movie", 42));
+            playbackActorRef.Tell(new PlayMovieMessage("Movie for user who should not be able to play", 666));
 
             Console.ReadLine();
 
