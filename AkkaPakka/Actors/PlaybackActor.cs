@@ -4,24 +4,18 @@ using System;
 
 namespace AkkaPakka.Actors
 {
-    public class PlaybackActor : UntypedActor
+    public class PlaybackActor : ReceiveActor
     {
         public PlaybackActor()
         {
             Console.WriteLine("Creating a PlaybackActor");
+
+            Receive<PlayMovieMessage>(message => HandlePlayMovieMessage(message));
         }
 
-        protected override void OnReceive(object message)
+        private void HandlePlayMovieMessage(PlayMovieMessage message)
         {
-            if (message is PlayMovieMessage playMessage)
-            {
-                Console.WriteLine($"Received play request for movie title {playMessage.MovieTitle}, user {playMessage.UserId}");
-            }
-            else
-            {
-                // we should let the actor system know when a message cannot be processed
-                Unhandled(message);
-            }
+            Console.WriteLine($"Received play request for movie title {message.MovieTitle}, user {message.UserId}");
         }
     }
 }
