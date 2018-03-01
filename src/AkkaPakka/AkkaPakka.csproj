@@ -63,8 +63,10 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Actors\PlaybackActor.cs" />
+    <Compile Include="Actors\UserActor.cs" />
     <Compile Include="ColourConsole.cs" />
     <Compile Include="Messages\PlayMovieMessage.cs" />
+    <Compile Include="Messages\StopMovieMessage.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

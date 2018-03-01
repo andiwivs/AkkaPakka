@@ -4,7 +4,6 @@ using AkkaPakka.Actors;
 using AkkaPakka.Messages;
 using Autofac;
 using System;
-using Akka.Util.Internal;
 
 namespace AkkaPakka
 {
@@ -24,23 +23,29 @@ namespace AkkaPakka
 
                 var resolver = new AutoFacDependencyResolver(Container, system);
 
-                var playbackActorRef = system.ActorOf(resolver.Create<PlaybackActor>(), "playbackActor");
+                var userActorRef = system.ActorOf(resolver.Create<UserActor>(), "userActor");
 
-                Logger.WriteVerbose("Finished registering actors");
+                Console.WriteLine("Press a key to progress through the process...");
 
-                playbackActorRef.Tell(new PlayMovieMessage("Akka Pakka: The Movie", 42));
-                playbackActorRef.Tell(new PlayMovieMessage("Partial Recall", 99));
-                playbackActorRef.Tell(new PlayMovieMessage("Boolean Lies", 77));
-                playbackActorRef.Tell(new PlayMovieMessage("Codenan the Destroyer", 1));
-
-                playbackActorRef.Tell(PoisonPill.Instance); // use a poison pill to force an actor instance to stop
-                
-                // press any key to shut down the system...
                 Console.ReadKey();
+                Logger.WriteVerbose("Sending a PlayMovieMessage (Akka Pakka: The Movie)");
+                userActorRef.Tell(new PlayMovieMessage("Akka Pakka: The Movie", 42));
 
+                Console.ReadKey();
+                Logger.WriteVerbose("Sending a PlayMovieMessage (Partial Recall)");
+                userActorRef.Tell(new PlayMovieMessage("Partial Recall", 99));
+
+                Console.ReadKey();
+                Logger.WriteVerbose("Sending a StopMovieMessage");
+                userActorRef.Tell(new StopMovieMessage());
+
+                Console.ReadKey();
+                Logger.WriteVerbose("Sending another StopMovieMessage");
+                userActorRef.Tell(new StopMovieMessage());
+                
+                Console.ReadKey();
                 system.Terminate().GetAwaiter().GetResult();
-
-                Logger.WriteVerbose("Actor system terminated");
+                Logger.WriteDebug("Actor system terminated");
             }
 
             Console.WriteLine("Press any key to exit...");
@@ -52,6 +57,7 @@ namespace AkkaPakka
             var builder = new ContainerBuilder();
 
             builder.RegisterType<ColourConsole>().As<ILogger>();
+            builder.RegisterType<UserActor>();
             builder.RegisterType<PlaybackActor>();
 
             Container = builder.Build();
