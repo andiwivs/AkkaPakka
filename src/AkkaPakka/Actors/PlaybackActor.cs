@@ -7,13 +7,13 @@ namespace AkkaPakka.Actors
     {
         private ILogger _logger;
 
-        public PlaybackActor()
+        public PlaybackActor(ILogger logger)
         {
-            _logger = new ColourConsole();
+            _logger = logger;
 
             _logger.WriteVerbose("Creating a PlaybackActor");
 
-            Receive<PlayMovieMessage>(HandlePlayMovieMessage, message => message.UserId == 42);
+            Receive<PlayMovieMessage>(message => HandlePlayMovieMessage(message));
         }
 
         private void HandlePlayMovieMessage(PlayMovieMessage message)

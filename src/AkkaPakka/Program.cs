@@ -1,37 +1,63 @@
-﻿using System;
-using Akka.Actor;
+﻿using Akka.Actor;
+using Akka.DI.AutoFac;
 using AkkaPakka.Actors;
 using AkkaPakka.Messages;
+using Autofac;
+using System;
+using Akka.Util.Internal;
 
 namespace AkkaPakka
 {
     class Program
     {
-        private static ActorSystem MovieStreamingActorSystem;
+        private static IContainer Container;
+        private static ILogger Logger;
 
         static void Main(string[] args)
         {
-            ILogger logger = new ColourConsole();
-
-            MovieStreamingActorSystem = ActorSystem.Create(nameof(MovieStreamingActorSystem));
-            logger.WriteVerbose("Actor system created");
+            ConfigureAutofac();
+            ResolveLogger();
             
-            var playbackActorProps = Props.Create<PlaybackActor>();
-            var playbackActorRef = MovieStreamingActorSystem.ActorOf(playbackActorProps, "playbackActor");
-            
-            playbackActorRef.Tell(new PlayMovieMessage("Akka Pakka: The Movie", 42));
-            playbackActorRef.Tell(new PlayMovieMessage("Partial Recall", 99));
-            playbackActorRef.Tell(new PlayMovieMessage("Boolean Lies", 77));
-            playbackActorRef.Tell(new PlayMovieMessage("Codenan the Destroyer", 1));
+            using (var system = ActorSystem.Create("MovieStreamingActorSystem"))
+            {
+                Logger.WriteVerbose("Actor system created");
 
-            // press any key to shut down the system...
-            Console.ReadKey();
+                var resolver = new AutoFacDependencyResolver(Container, system);
 
-            MovieStreamingActorSystem.Terminate();
-            logger.WriteVerbose("Actor system terminated");
+                var playbackActorRef = system.ActorOf(resolver.Create<PlaybackActor>(), "playbackActor");
+
+                Logger.WriteVerbose("Finished registering actors");
+
+                playbackActorRef.Tell(new PlayMovieMessage("Akka Pakka: The Movie", 42));
+                playbackActorRef.Tell(new PlayMovieMessage("Partial Recall", 99));
+                playbackActorRef.Tell(new PlayMovieMessage("Boolean Lies", 77));
+                playbackActorRef.Tell(new PlayMovieMessage("Codenan the Destroyer", 1));
+                
+                // press any key to shut down the system...
+                Console.ReadKey();
+
+                system.Terminate();
+
+                Logger.WriteVerbose("Actor system terminated");
+            }
 
             Console.WriteLine("Press any key to exit...");
             Console.ReadKey();
+        }
+
+        static void ConfigureAutofac()
+        {
+            var builder = new ContainerBuilder();
+
+            builder.RegisterType<ColourConsole>().As<ILogger>();
+            builder.RegisterType<PlaybackActor>();
+
+            Container = builder.Build();
+        }
+
+        static void ResolveLogger()
+        {
+            Logger = Container.Resolve<ILogger>();
         }
     }
 }
