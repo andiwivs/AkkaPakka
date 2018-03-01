@@ -13,40 +13,25 @@ namespace AkkaPakka.Actors
         {
             _logger = logger;
 
-            _logger.WriteVerbose("Creating a PlaybackActor");
-
-            Receive<PlayMovieMessage>(message => HandlePlayMovieMessage(message));
-            Receive<StopMovieMessage>(message => HandleStopMovieMessage());
+            _logger.WriteDebug("Creating a UserActor");
+            _logger.WriteDebug("Setting initial behaviour to Stopped");
+            Stopped();
         }
 
-        private void HandlePlayMovieMessage(PlayMovieMessage message)
+        private void Playing()
         {
-            _logger.WriteDebug($"Received play request for movie title {message.MovieTitle}, user {message.UserId}");
+            Receive<PlayMovieMessage>(message => _logger.WriteError("Cannot start playing another movie before stopping existing one"));
+            Receive<StopMovieMessage>(message => StopPlayingMovie());
 
-            // business logic rule: only one movie can be played at any one time
-            if (_currentlyWatching != null)
-            {
-                _logger.WriteError("Cannot start playing another movie before stopping existing one");
-            }
-            else
-            {
-                StartPlayingMovie(message.MovieTitle);
-            }
+            _logger.WriteSuccess("UserActor has now become Playing");
         }
 
-        private void HandleStopMovieMessage()
+        private void Stopped()
         {
-            _logger.WriteDebug("Received stop request");
+            Receive<PlayMovieMessage>(message => StartPlayingMovie(message.MovieTitle));
+            Receive<StopMovieMessage>(message => _logger.WriteError("Cannot stop if nothing is playing"));
 
-            // business logic rule: can only stop a movie if one is playing
-            if (_currentlyWatching == null)
-            {
-                _logger.WriteError("Cannot stop if nothing is playing");
-            }
-            else
-            {
-                StopPlayingMovie();
-            }
+            _logger.WriteSuccess("UserActor has now become Stopped");
         }
 
         private void StartPlayingMovie(string movieTitle)
@@ -54,6 +39,8 @@ namespace AkkaPakka.Actors
             _currentlyWatching = movieTitle;
 
             _logger.WriteSuccess($"User is currently watching {movieTitle}");
+
+            Become(Playing);
         }
 
         private void StopPlayingMovie()
@@ -61,6 +48,8 @@ namespace AkkaPakka.Actors
             _logger.WriteSuccess($"User has stopped watching {_currentlyWatching}");
 
             _currentlyWatching = null;
+
+            Become(Stopped);
         }
 
         protected override void PreStart()
