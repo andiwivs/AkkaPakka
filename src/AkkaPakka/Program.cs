@@ -32,11 +32,13 @@ namespace AkkaPakka
                 playbackActorRef.Tell(new PlayMovieMessage("Partial Recall", 99));
                 playbackActorRef.Tell(new PlayMovieMessage("Boolean Lies", 77));
                 playbackActorRef.Tell(new PlayMovieMessage("Codenan the Destroyer", 1));
+
+                playbackActorRef.Tell(PoisonPill.Instance); // use a poison pill to force an actor instance to stop
                 
                 // press any key to shut down the system...
                 Console.ReadKey();
 
-                system.Terminate();
+                system.Terminate().GetAwaiter().GetResult();
 
                 Logger.WriteVerbose("Actor system terminated");
             }

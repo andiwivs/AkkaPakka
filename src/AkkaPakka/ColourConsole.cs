@@ -6,6 +6,7 @@ namespace AkkaPakka
     {
         void WriteVerbose(string message);
         void WriteSuccess(string message);
+        void WriteError(string message);
         void WriteDebug(string message);
     }
 
@@ -22,6 +23,15 @@ namespace AkkaPakka
 
             Console.ForegroundColor = ConsoleColor.Green;
             Console.WriteLine(DecorateMessage(message, "Success"));
+            Console.ForegroundColor = beforeColour;
+        }
+
+        public void WriteError(string message)
+        {
+            var beforeColour = Console.ForegroundColor;
+
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine(DecorateMessage(message, "Error"));
             Console.ForegroundColor = beforeColour;
         }
 

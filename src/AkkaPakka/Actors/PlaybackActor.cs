@@ -1,4 +1,5 @@
-﻿using Akka.Actor;
+﻿using System;
+using Akka.Actor;
 using AkkaPakka.Messages;
 
 namespace AkkaPakka.Actors
@@ -18,7 +19,35 @@ namespace AkkaPakka.Actors
 
         private void HandlePlayMovieMessage(PlayMovieMessage message)
         {
-            _logger.WriteDebug($"Received play request for movie title {message.MovieTitle}, user {message.UserId}");
+            _logger.WriteSuccess($"Received play request for movie title {message.MovieTitle}, user {message.UserId}");
+        }
+
+        protected override void PreStart()
+        {
+            _logger.WriteDebug("PlaybackActor PreStart");
+
+            base.PreStart();
+        }
+
+        protected override void PostStop()
+        {
+            _logger.WriteDebug("PlaybackActor PostStop");
+
+            base.PostStop();
+        }
+
+        protected override void PreRestart(Exception reason, object message)
+        {
+            _logger.WriteError($"PlaybackActor PreRestart: {reason}");
+
+            base.PreRestart(reason, message);
+        }
+
+        protected override void PostRestart(Exception reason)
+        {
+            _logger.WriteError($"PlaybackActor PostRestart: {reason}");
+
+            base.PostRestart(reason);
         }
     }
 }
