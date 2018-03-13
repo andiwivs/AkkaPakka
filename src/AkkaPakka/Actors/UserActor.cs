@@ -23,7 +23,7 @@ namespace AkkaPakka.Actors
             Receive<PlayMovieMessage>(message => _logger.WriteError("Cannot start playing another movie before stopping existing one"));
             Receive<StopMovieMessage>(message => StopPlayingMovie());
 
-            _logger.WriteSuccess("UserActor has now become Playing");
+            _logger.WriteSuccess($"{Self.Path.Name} has now become Playing");
         }
 
         private void Stopped()
@@ -31,53 +31,61 @@ namespace AkkaPakka.Actors
             Receive<PlayMovieMessage>(message => StartPlayingMovie(message.MovieTitle));
             Receive<StopMovieMessage>(message => _logger.WriteError("Cannot stop if nothing is playing"));
 
-            _logger.WriteSuccess("UserActor has now become Stopped");
+            _logger.WriteSuccess($"{Self.Path.Name} has now become Stopped");
         }
 
         private void StartPlayingMovie(string movieTitle)
         {
             _currentlyWatching = movieTitle;
 
-            _logger.WriteSuccess($"User is currently watching {movieTitle}");
+            _logger.WriteSuccess($"{Self.Path.Name} is currently watching {movieTitle}");
+
+            Context
+                .ActorSelection("/user/Playback/PlaybackStatistics/MoviePlayCounter")
+                .Tell(new IncrementPlayCountMessage(movieTitle));
 
             Become(Playing);
         }
 
         private void StopPlayingMovie()
         {
-            _logger.WriteSuccess($"User has stopped watching {_currentlyWatching}");
+            _logger.WriteSuccess($"{Self.Path.Name} has stopped watching {_currentlyWatching}");
 
             _currentlyWatching = null;
 
             Become(Stopped);
         }
 
+        #region lifecycle hooks
+
         protected override void PreStart()
         {
-            _logger.WriteDebug("UserActor PreStart");
+            _logger.WriteDebug($"{Self.Path.Name} PreStart");
 
             base.PreStart();
         }
 
         protected override void PostStop()
         {
-            _logger.WriteDebug("UserActor PostStop");
+            _logger.WriteDebug($"{Self.Path.Name} PostStop");
 
             base.PostStop();
         }
 
         protected override void PreRestart(Exception reason, object message)
         {
-            _logger.WriteError($"UserActor PreRestart: {reason}");
+            _logger.WriteError($"{Self.Path.Name} PreRestart: {reason}");
 
             base.PreRestart(reason, message);
         }
 
         protected override void PostRestart(Exception reason)
         {
-            _logger.WriteError($"UserActor PostRestart: {reason}");
+            _logger.WriteError($"{Self.Path.Name} PostRestart: {reason}");
 
             base.PostRestart(reason);
         }
+
+        #endregion
     }
 }

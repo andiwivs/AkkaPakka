@@ -1,24 +1,22 @@
 ﻿using Akka.Actor;
-using Akka.DI.Core;
 using System;
+using Akka.DI.Core;
 
 namespace AkkaPakka.Actors
 {
-    public class PlaybackActor : ReceiveActor
+    public class PlaybackStatisticsActor : ReceiveActor
     {
         private ILogger _logger;
 
-        public PlaybackActor(ILogger logger)
+        public PlaybackStatisticsActor(ILogger logger)
         {
             _logger = logger;
 
-            _logger.WriteVerbose("Creating a PlaybackActor");
+            _logger.WriteVerbose("Creating a PlaybackStatisticsActor");
             
-            var userCoordinatorActorProps = Context.DI().Props<UserCoordinatorActor>();
-            var playbackStatisticsActorProps = Context.DI().Props<PlaybackStatisticsActor>();
+            var moviePlayCounterActorProps = Context.DI().Props<MoviePlayCounterActor>();
 
-            Context.ActorOf(userCoordinatorActorProps, "UserCoordinator");
-            Context.ActorOf(playbackStatisticsActorProps, "PlaybackStatistics");
+            Context.ActorOf(moviePlayCounterActorProps, "MoviePlayCounter");
         }
 
         #region lifecycle hooks

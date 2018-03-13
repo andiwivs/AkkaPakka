@@ -12,38 +12,60 @@ namespace AkkaPakka
         private static IContainer Container;
         private static ILogger Logger;
 
+        private static readonly string SystemName = "MovieStreamingActorSystem";
+        private static readonly string PlaybackActorName = "Playback";
+        private static readonly string UserCoordinatorActorName = "UserCoordinator";
+
         static void Main(string[] args)
         {
             ConfigureAutofac();
             ResolveLogger();
             
-            using (var system = ActorSystem.Create("MovieStreamingActorSystem"))
+            using (var system = ActorSystem.Create(SystemName))
             {
                 Logger.WriteVerbose("Actor system created");
 
                 var resolver = new AutoFacDependencyResolver(Container, system);
 
-                var userActorRef = system.ActorOf(resolver.Create<UserActor>(), "userActor");
+                system.ActorOf(resolver.Create<PlaybackActor>(), PlaybackActorName);
 
-                Console.WriteLine("Press a key to progress through the process...");
+                bool running = true;
 
-                Console.ReadKey();
-                Logger.WriteVerbose("Sending a PlayMovieMessage (Akka Pakka: The Movie)");
-                userActorRef.Tell(new PlayMovieMessage("Akka Pakka: The Movie", 42));
+                do
+                {
+                    Console.WriteLine("Enter a command and hit Enter");
+                    Console.WriteLine("eg 'play <user id> <movie title>'");
+                    Console.WriteLine("eg 'stop <user id>'");
+                    Console.WriteLine("(enter 'exit' to quit)");
 
-                Console.ReadKey();
-                Logger.WriteVerbose("Sending a PlayMovieMessage (Partial Recall)");
-                userActorRef.Tell(new PlayMovieMessage("Partial Recall", 99));
+                    var command = Console.ReadLine();
+                    
+                    if (command.StartsWith("play", StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        var parts = command.Split(new[] {' '}, 3);
+                        var userId = int.Parse(parts[1]);
+                        var movieTitle = parts[2];
 
-                Console.ReadKey();
-                Logger.WriteVerbose("Sending a StopMovieMessage");
-                userActorRef.Tell(new StopMovieMessage());
+                        var message = new PlayMovieMessage(movieTitle, userId);
+                        system.ActorSelection($"/user/{PlaybackActorName}/{UserCoordinatorActorName}").Tell(message);
+                    }
 
-                Console.ReadKey();
-                Logger.WriteVerbose("Sending another StopMovieMessage");
-                userActorRef.Tell(new StopMovieMessage());
-                
-                Console.ReadKey();
+                    if (command.StartsWith("stop", StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        var parts = command.Split(new[] { ' ' }, 2);
+                        var userId = int.Parse(parts[1]);
+
+                        var message = new StopMovieMessage(userId);
+                        system.ActorSelection($"/user/{PlaybackActorName}/{UserCoordinatorActorName}").Tell(message);
+                    }
+
+                    if (command.StartsWith("exit", StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        running = false;
+                    }
+
+                } while (running);
+
                 system.Terminate().GetAwaiter().GetResult();
                 Logger.WriteDebug("Actor system terminated");
             }
@@ -56,9 +78,12 @@ namespace AkkaPakka
         {
             var builder = new ContainerBuilder();
 
-            builder.RegisterType<ColourConsole>().As<ILogger>();
-            builder.RegisterType<UserActor>();
+            builder.RegisterType<ColourConsoleLogger>().As<ILogger>();
             builder.RegisterType<PlaybackActor>();
+            builder.RegisterType<UserCoordinatorActor>();
+            builder.RegisterType<UserActor>();
+            builder.RegisterType<PlaybackStatisticsActor>();
+            builder.RegisterType<MoviePlayCounterActor>();
 
             Container = builder.Build();
         }
