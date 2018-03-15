@@ -1,7 +1,8 @@
 ﻿using Akka.Actor;
+using AkkaPakka.Exceptions;
+using AkkaPakka.Messages;
 using System;
 using System.Collections.Generic;
-using AkkaPakka.Messages;
 
 namespace AkkaPakka.Actors
 {
@@ -33,6 +34,17 @@ namespace AkkaPakka.Actors
             else
             {
                 _moviePlayCounts.Add(message.MovieTitle, 1);
+            }
+
+            // simulate bugs...
+            if (_moviePlayCounts[message.MovieTitle] > 3)
+            {
+                throw new SimulatedCorruptStateException();
+            }
+
+            if (message.MovieTitle.Equals("partial recoil", StringComparison.InvariantCultureIgnoreCase))
+            {
+                throw new SimulatedTerribleMovieException();
             }
 
             _logger.WriteDebug($"{Self.Path.Name}: {message.MovieTitle} has been watched {_moviePlayCounts[message.MovieTitle]} time(s)");
